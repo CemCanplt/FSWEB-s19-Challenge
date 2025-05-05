@@ -25,4 +25,6 @@ public interface TweetsService {
     // Delete: Belirli bir ID'ye sahip Tweets öğesini sil
     // Tweets ID'sinin Long olduğunu varsayıyoruz
     Tweets deleteById(long id);
+
+    Tweets update(long id, String text);
 }
