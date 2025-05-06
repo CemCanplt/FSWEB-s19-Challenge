@@ -1,5 +1,7 @@
 package com.twitter.mavikus.service;
 
+import com.twitter.mavikus.dto.TweetCreateDTO;
+import com.twitter.mavikus.dto.TweetUpdateDTO;
 import com.twitter.mavikus.entity.Tweets;
 
 import java.util.List;
@@ -27,4 +29,18 @@ public interface TweetsService {
     Tweets deleteById(long id);
 
     Tweets update(long id, String text);
+    
+    // Yeni eklenen metodlar
+    Tweets createTweet(TweetCreateDTO tweetDTO);
+    
+    List<Tweets> findTweetsByUserId(long userId);
+    
+    // Bir tweet'in tüm detaylarını getir
+    Tweets getTweetWithDetails(long tweetId);
+    
+    // Tweet güncelleme için yeni metod (DTO kullanarak)
+    Tweets updateTweet(Long id, TweetUpdateDTO tweetUpdateDTO);
+    
+    // Tweet silme - sadece sahibi silebilir
+    Tweets deleteTweetByOwner(Long tweetId, Long userId);
 }
