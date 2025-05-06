@@ -36,6 +36,6 @@ public class Tweets {
     @Column(name = "created_at")
     private Instant createdAt;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "tweets")
     List<Likes> likes = new ArrayList<>();
 }

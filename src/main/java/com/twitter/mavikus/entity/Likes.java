@@ -24,7 +24,6 @@ public class Likes {
     @JoinColumn(name = "tweet_id", nullable = false)
     private Tweets tweets;
 
-
     // CascadeType.ALL, CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH
     // @ManyToMany için :@join:t yazabilirsin.
     // Default olarak LAZY gelir.
