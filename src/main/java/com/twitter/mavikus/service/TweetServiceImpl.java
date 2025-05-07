@@ -15,7 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @Service
@@ -75,6 +77,20 @@ public class TweetServiceImpl implements TweetService {
         
         // Tweet'i kaydet ve döndür
         return tweetRepository.save(tweet);
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> createTweetResponseMap(Tweet tweet, User user) {
+        // Tweet ve User bilgileriyle HTTP yanıtı için bir Map oluştur
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", tweet.getId());
+        response.put("content", tweet.getContent());
+        response.put("createdAt", tweet.getCreatedAt());
+        response.put("userId", user.getId());
+        response.put("userName", user.getUsername());
+        
+        return response;
     }
 
     @Override

@@ -8,12 +8,14 @@ import com.twitter.mavikus.entity.User;
 import com.twitter.mavikus.service.TweetService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RequestMapping("/tweet")
 @AllArgsConstructor
@@ -24,12 +26,18 @@ public class TweetController {
     private final TweetService tweetService;
 
     @PostMapping
-    public Tweet postTweet(@RequestBody @Valid TweetCreateDTO tweetDTO, Authentication authentication) {
+    public ResponseEntity<Map<String, Object>> postTweet(@RequestBody @Valid TweetCreateDTO tweetDTO, Authentication authentication) {
         // Giriş yapmış kullanıcıyı al
         User currentUser = (User) authentication.getPrincipal();
         
-        // Sadece tweet içeriği ve kullanıcı bilgisini kullanarak tweet oluştur
-        return tweetService.createTweet(tweetDTO, currentUser);
+        // Tweet'i oluştur
+        Tweet createdTweet = tweetService.createTweet(tweetDTO, currentUser);
+        
+        // Service katmanında response map'i oluştur
+        Map<String, Object> response = tweetService.createTweetResponseMap(createdTweet, currentUser);
+        
+        // HTTP 201 Created statüsü ile yanıt döndür
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/findById")

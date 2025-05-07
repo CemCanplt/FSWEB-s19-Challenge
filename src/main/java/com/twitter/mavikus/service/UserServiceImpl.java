@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findUserByUserName(username).orElseThrow(()-> {
+        return userRepository.findByUserName(username).orElseThrow(()-> {
             System.out.println("Kullanıcı bilgileri hatalı: " + username);
             throw new UsernameNotFoundException("Kullanıcı bilgileri hatalı: " + username);
         });

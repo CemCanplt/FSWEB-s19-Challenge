@@ -7,6 +7,7 @@ import com.twitter.mavikus.entity.Tweet;
 import com.twitter.mavikus.entity.User;
 
 import java.util.List;
+import java.util.Map;
 
 public interface TweetService {
     // Buraya servis fonksiyonlarını yazabilirsin.
@@ -47,4 +48,7 @@ public interface TweetService {
     
     // Kullanıcı kimliğini doğrudan alan yeni metod
     Tweet createTweet(TweetCreateDTO tweetDTO, User user);
+    
+    // Tweet bilgilerinden response map oluşturan yeni metod
+    Map<String, Object> createTweetResponseMap(Tweet tweet, User user);
 }

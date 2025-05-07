@@ -6,6 +6,7 @@ import com.twitter.mavikus.dto.RegisterUserDTO;
 import com.twitter.mavikus.service.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
@@ -33,7 +34,13 @@ public class AuthController {
                 registerUser.password()
         );
         
-        return ResponseEntity.ok(response);
+        // Başarı durumuna göre uygun HTTP durum kodu döndür
+        if (response.success()) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } else {
+            // Başarısız kayıt durumunda daha spesifik durum kodları da belirlenebilir
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
     }
 
     @PostMapping("/login")
