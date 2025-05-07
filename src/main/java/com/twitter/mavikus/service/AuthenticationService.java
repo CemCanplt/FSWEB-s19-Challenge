@@ -1,6 +1,6 @@
 package com.twitter.mavikus.service;
 
-import com.twitter.mavikus.dto.RegisterResponseDTO;
+import com.twitter.mavikus.dto.auth.RegisterResponseDTO;
 import com.twitter.mavikus.entity.Role;
 import com.twitter.mavikus.entity.User;
 import com.twitter.mavikus.exceptions.MaviKusErrorException;

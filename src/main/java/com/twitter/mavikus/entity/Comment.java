@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import java.time.Instant;
 
@@ -26,6 +29,7 @@ public class Comment {
     private User user;
     
     @ManyToOne // Birçok Yorum -> Bir Tweet
+    @JsonBackReference
     @JoinColumn(name = "tweet_id", nullable = false)
     private Tweet tweet;
 
@@ -36,8 +40,8 @@ public class Comment {
     @Column(name = "created_at")
     private Instant createdAt;
 
-    @CreationTimestamp
-    @Column(name = "update_at")
-    private Instant updateAt;
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
 }

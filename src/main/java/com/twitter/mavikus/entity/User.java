@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.time.Instant;
 import java.util.*;
 
@@ -50,6 +53,7 @@ public class User implements UserDetails {
     // Default olarak LAZY gelir.
     // mappedBy="karşıdaki_ManyToOne_alanının_adı"
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
+    @JsonManagedReference // Bu, döngüsel referansı önlemek için kullanılır.
     List<Tweet> tweets = new ArrayList<>();
 
     // İsteğe bağlı olarak, ilişkiyi her iki taraftan da kurmaya yardımcı metodlar (Bu en iyi pratiktir)

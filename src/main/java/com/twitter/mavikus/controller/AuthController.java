@@ -1,8 +1,8 @@
 package com.twitter.mavikus.controller;
 
-import com.twitter.mavikus.dto.LoginDTO;
-import com.twitter.mavikus.dto.RegisterResponseDTO;
-import com.twitter.mavikus.dto.RegisterUserDTO;
+import com.twitter.mavikus.dto.auth.LoginDTO;
+import com.twitter.mavikus.dto.auth.RegisterResponseDTO;
+import com.twitter.mavikus.dto.auth.RegisterUserDTO;
 import com.twitter.mavikus.service.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;

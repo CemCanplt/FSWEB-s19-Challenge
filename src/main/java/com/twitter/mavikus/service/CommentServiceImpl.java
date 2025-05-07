@@ -1,7 +1,7 @@
 package com.twitter.mavikus.service;
 
-import com.twitter.mavikus.dto.CommentCreateDTO;
-import com.twitter.mavikus.dto.CommentUpdateDTO;
+import com.twitter.mavikus.dto.comment.CommentCreateDTO;
+import com.twitter.mavikus.dto.comment.CommentUpdateDTO;
 import com.twitter.mavikus.entity.Comment;
 import com.twitter.mavikus.entity.Tweet;
 import com.twitter.mavikus.entity.User;
@@ -88,7 +88,7 @@ public class CommentServiceImpl implements CommentService {
         
         // Yorumu güncelle
         comment.setCommentText(commentUpdateDTO.getCommentText());
-        comment.setUpdateAt(Instant.now()); // Güncelleme zamanını ayarla
+        comment.setUpdatedAt(Instant.now()); // Güncelleme zamanını ayarla
         
         // Güncellenmiş yorumu kaydet ve döndür
         return commentRepository.save(comment);
@@ -116,7 +116,7 @@ public class CommentServiceImpl implements CommentService {
         deletedComment.setUser(comment.getUser());
         deletedComment.setTweet(comment.getTweet());
         deletedComment.setCreatedAt(comment.getCreatedAt());
-        deletedComment.setUpdateAt(comment.getUpdateAt());
+        deletedComment.setUpdatedAt(comment.getUpdatedAt());
         
         // Yorumu sil ve referansı döndür
         commentRepository.deleteById(commentId);

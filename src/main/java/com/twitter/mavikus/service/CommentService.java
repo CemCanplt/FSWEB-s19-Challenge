@@ -1,7 +1,7 @@
 package com.twitter.mavikus.service;
 
-import com.twitter.mavikus.dto.CommentCreateDTO;
-import com.twitter.mavikus.dto.CommentUpdateDTO;
+import com.twitter.mavikus.dto.comment.CommentCreateDTO;
+import com.twitter.mavikus.dto.comment.CommentUpdateDTO;
 import com.twitter.mavikus.entity.Comment;
 import com.twitter.mavikus.entity.User;
 

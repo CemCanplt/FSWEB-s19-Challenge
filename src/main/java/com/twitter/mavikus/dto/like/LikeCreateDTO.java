@@ -1,4 +1,4 @@
-package com.twitter.mavikus.dto;
+package com.twitter.mavikus.dto.like;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

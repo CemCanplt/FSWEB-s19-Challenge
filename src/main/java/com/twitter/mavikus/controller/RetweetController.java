@@ -1,6 +1,7 @@
 package com.twitter.mavikus.controller;
 
-import com.twitter.mavikus.dto.RetweetCreateDTO;
+import com.twitter.mavikus.dto.retweet.RetweetCreateDTO;
+import com.twitter.mavikus.dto.retweet.RetweetResponseDTO;
 import com.twitter.mavikus.entity.Retweet;
 import com.twitter.mavikus.entity.User;
 import com.twitter.mavikus.service.RetweetService;
@@ -23,12 +24,12 @@ public class RetweetController {
     private final RetweetService retweetService;
 
     @PostMapping
-    public ResponseEntity<Retweet> createRetweet(@RequestBody @Valid RetweetCreateDTO retweetDTO, Authentication authentication) {
+    public ResponseEntity<RetweetResponseDTO> createRetweet(@RequestBody @Valid RetweetCreateDTO retweetDTO, Authentication authentication) {
         // Giriş yapmış kullanıcıyı al
         User currentUser = (User) authentication.getPrincipal();
         
-        // Retweet işlemini gerçekleştir
-        Retweet createdRetweet = retweetService.createRetweet(retweetDTO, currentUser);
+        // Retweet işlemini gerçekleştir ve DTO dön
+        RetweetResponseDTO createdRetweet = retweetService.createRetweetAndReturnDTO(retweetDTO, currentUser);
         
         // HTTP 201 Created statüsü ile birlikte oluşturulan retweet'i döndür
         return new ResponseEntity<>(createdRetweet, HttpStatus.CREATED);
@@ -49,14 +50,14 @@ public class RetweetController {
     }
     
     @DeleteMapping("/{id}")
-    public ResponseEntity<Retweet> deleteRetweet(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<RetweetResponseDTO> deleteRetweet(@PathVariable Long id, Authentication authentication) {
         // Giriş yapmış kullanıcıyı al
         User currentUser = (User) authentication.getPrincipal();
         
-        // Retweet silme işlemini gerçekleştir - sadece sahibi silebilir
-        Retweet deletedRetweet = retweetService.deleteRetweetByOwner(id, currentUser.getId());
+        // Retweet silme işlemini gerçekleştir ve DTO dön
+        RetweetResponseDTO deletedRetweet = retweetService.deleteRetweetByOwnerAndReturnDTO(id, currentUser.getId());
         
-        // HTTP 200 OK statüsü ile birlikte silinen retweet'i döndür
+        // HTTP 200 OK statüsü ile birlikte silinen retweet bilgilerini döndür
         return ResponseEntity.ok(deletedRetweet);
     }
 }

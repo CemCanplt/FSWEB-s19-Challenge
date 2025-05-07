@@ -1,6 +1,9 @@
 package com.twitter.mavikus.service;
 
-import com.twitter.mavikus.dto.LikeCreateDTO;
+import com.twitter.mavikus.dto.like.DislikeResponseDTO;
+import com.twitter.mavikus.dto.like.LikeCreateDTO;
+import com.twitter.mavikus.dto.like.LikeConvertorDTO;
+import com.twitter.mavikus.dto.like.LikeResponseDTO;
 import com.twitter.mavikus.entity.Like;
 import com.twitter.mavikus.entity.Tweet;
 import com.twitter.mavikus.entity.User;
@@ -51,7 +54,7 @@ public class LikeServiceImpl implements LikeService {
     public Like addLike(LikeCreateDTO likeDTO, User currentUser) {
         // Tweet'i ID'ye göre bul
         Tweet tweet = tweetRepository.findById(likeDTO.getTweetId())
-                .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen tweet bulunamadı: " + likeDTO.getTweetId(),
+                .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen tweet bulunamadı: " + likeDTO.getTweetId(), 
                         HttpStatus.NOT_FOUND));
         
         // Kullanıcının bu tweet'i daha önce beğenip beğenmediğini kontrol et
@@ -74,6 +77,16 @@ public class LikeServiceImpl implements LikeService {
                     HttpStatus.CONFLICT);
         }
     }
+    
+    @Override
+    @Transactional
+    public LikeResponseDTO addLikeAndReturnDTO(LikeCreateDTO likeDTO, User currentUser) {
+        // Mevcut addLike metodunu kullanarak beğeni ekleyin
+        Like createdLike = addLike(likeDTO, currentUser);
+        
+        // Entity'yi DTO'ya dönüştür
+        return LikeConvertorDTO.toResponseDTO(createdLike);
+    }
 
     @Override
     public List<Like> findLikesByTweetId(long tweetId) {
@@ -90,17 +103,23 @@ public class LikeServiceImpl implements LikeService {
     public List<Like> findLikesByUserId(long userId) {
         return likeRepository.findByUserId(userId);
     }
-
+    
     @Override
     @Transactional
-    public void removeLike(long tweetId, long userId) {
-        // Beğeni kaydını bul
+    public DislikeResponseDTO removeLikeAndReturnDTO(long tweetId, long userId) {
+        // Beğeninin var olup olmadığını kontrol et
         Optional<Like> existingLike = likeRepository.findByTweetIdAndUserId(tweetId, userId);
         if (!existingLike.isPresent()) {
-            throw new MaviKusErrorException("Bu tweet için bir beğeniniz bulunamadı.", HttpStatus.NOT_FOUND);
+            throw new MaviKusErrorException("Bu tweet için bir beğeniniz bulunmamaktadır.", HttpStatus.NOT_FOUND);
         }
+        
+        // Tweet bilgilerini sakla
+        Tweet tweet = existingLike.get().getTweet();
         
         // Beğeniyi sil
         likeRepository.deleteById(existingLike.get().getId());
+        
+        // DislikeResponseDTO oluştur ve döndür
+        return LikeConvertorDTO.toDislikeResponseDTO(tweet);
     }
 }

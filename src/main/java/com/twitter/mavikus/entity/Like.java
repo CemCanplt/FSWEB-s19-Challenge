@@ -1,6 +1,8 @@
 package com.twitter.mavikus.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +23,7 @@ public class Like {
 
     @ManyToOne
     @JoinColumn(name = "tweet_id", nullable = false)
+    @JsonBackReference
     private Tweet tweet;
 
     // CascadeType.ALL, CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH

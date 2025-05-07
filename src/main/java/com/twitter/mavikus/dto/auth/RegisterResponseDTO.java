@@ -1,4 +1,4 @@
-package com.twitter.mavikus.dto;
+package com.twitter.mavikus.dto.auth;
 
 import java.time.Instant;
 

@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import java.time.Instant;
 
 @AllArgsConstructor
@@ -23,6 +25,7 @@ public class Retweet {
 
     @ManyToOne // Birçok Retweet -> Bir Tweet (Orijinal Tweet)
     @JoinColumn(name = "original_tweet_id", nullable = false)
+    @JsonBackReference
     private Tweet originalTweet;
 
     @ManyToOne // Birçok Retweet -> Bir Kullanıcı

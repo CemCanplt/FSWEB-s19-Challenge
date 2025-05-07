@@ -1,8 +1,10 @@
 package com.twitter.mavikus.controller;
 
-import com.twitter.mavikus.dto.TweetCreateDTO;
-import com.twitter.mavikus.dto.TweetResponseDTO;
-import com.twitter.mavikus.dto.TweetUpdateDTO;
+import com.twitter.mavikus.dto.tweet.TweetCreateDTO;
+import com.twitter.mavikus.dto.tweet.TweetDeleteResponseDTO;
+import com.twitter.mavikus.dto.tweet.TweetResponseDTO;
+import com.twitter.mavikus.dto.tweet.TweetUpdateDTO;
+import com.twitter.mavikus.dto.tweet.TweetUpdateResponseDTO;
 import com.twitter.mavikus.entity.Tweet;
 import com.twitter.mavikus.entity.User;
 import com.twitter.mavikus.service.TweetService;
@@ -47,32 +49,38 @@ public class TweetController {
         return ResponseEntity.ok(tweet);
     }
 
+    /**
+     * Yeni eklenen endpoint - DTO formatında dönüş yapar ve auth gerektirmez (public)
+     * Bu metod sonsuz rekürsiyon sorununu çözer ve hassas verileri gizler
+     */
     @GetMapping("/findByUserId")
-    public ResponseEntity<List<Tweet>> getAllTweetsByUserId(@RequestParam long userId) {
+    public ResponseEntity<List<TweetResponseDTO>> getAllTweetsByUserId(@RequestParam long userId) {
         // Service katmanına iş mantığını devret
-        List<Tweet> tweets = tweetService.findTweetsByUserId(userId);
-        return ResponseEntity.ok(tweets);
+        List<TweetResponseDTO> tweetDTOs = tweetService.findTweetDTOsByUserId(userId);
+        return ResponseEntity.ok(tweetDTOs);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Tweet> updateTweet(@PathVariable Long id, 
+    public ResponseEntity<TweetUpdateResponseDTO> updateTweet(@PathVariable Long id, 
                                             @RequestBody @Valid TweetUpdateDTO tweetUpdateDTO, 
                                             Authentication authentication) {
         // Giriş yapmış kullanıcıyı al
         User currentUser = (User) authentication.getPrincipal();
         
         // Service katmanına iş mantığını devret, kullanıcı ID'sini de geçiriyoruz
-        Tweet updatedTweet = tweetService.updateTweet(id, tweetUpdateDTO, currentUser.getId());
-        return ResponseEntity.ok(updatedTweet);
+        // ve sadece gerekli bilgileri içeren DTO döndürüyoruz
+        TweetUpdateResponseDTO response = tweetService.updateTweetSimple(id, tweetUpdateDTO, currentUser.getId());
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Tweet> deleteTweet(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<TweetDeleteResponseDTO> deleteTweet(@PathVariable Long id, Authentication authentication) {
         // Giriş yapmış kullanıcıyı al
         User currentUser = (User) authentication.getPrincipal();
         
         // Service katmanına iş mantığını devret, kullanıcı ID'sini de geçiriyoruz
-        Tweet deletedTweet = tweetService.deleteTweetByOwner(id, currentUser.getId());
-        return ResponseEntity.ok(deletedTweet);
+        // ve sadece gerekli bilgileri içeren DTO döndürüyoruz
+        TweetDeleteResponseDTO response = tweetService.deleteTweetAndReturnDTO(id, currentUser.getId());
+        return ResponseEntity.ok(response);
     }
 }

@@ -1,6 +1,8 @@
 package com.twitter.mavikus.service;
 
-import com.twitter.mavikus.dto.RetweetCreateDTO;
+import com.twitter.mavikus.dto.retweet.RetweetConvertorDTO;
+import com.twitter.mavikus.dto.retweet.RetweetCreateDTO;
+import com.twitter.mavikus.dto.retweet.RetweetResponseDTO;
 import com.twitter.mavikus.entity.Retweet;
 import com.twitter.mavikus.entity.Tweet;
 import com.twitter.mavikus.entity.User;
@@ -74,6 +76,16 @@ public class RetweetServiceImpl implements RetweetService {
                     HttpStatus.CONFLICT);
         }
     }
+    
+    @Override
+    @Transactional
+    public RetweetResponseDTO createRetweetAndReturnDTO(RetweetCreateDTO retweetDTO, User user) {
+        // Mevcut createRetweet metodunu kullanarak retweet ekle
+        Retweet createdRetweet = createRetweet(retweetDTO, user);
+        
+        // Entity'yi DTO'ya dönüştür
+        return RetweetConvertorDTO.toResponseDTO(createdRetweet);
+    }
 
     @Override
     public List<Retweet> findRetweetsByTweetId(Long tweetId) {
@@ -107,5 +119,26 @@ public class RetweetServiceImpl implements RetweetService {
         
         // Silinen retweet'i döndür
         return retweet;
+    }
+    
+    @Override
+    @Transactional
+    public RetweetResponseDTO deleteRetweetByOwnerAndReturnDTO(Long retweetId, Long userId) {
+        // Retweet'i ID'ye göre bul
+        Retweet retweet = findById(retweetId);
+        
+        // Retweet'in sahibi bu kullanıcı mı kontrol et
+        if (!retweet.getUser().getId().equals(userId)) {
+            throw new MaviKusErrorException("Bu retweet'i silme yetkiniz yok! Retweet sadece sahibi tarafından silinebilir.", HttpStatus.FORBIDDEN);
+        }
+        
+        // Retweet bilgilerini sakla
+        RetweetResponseDTO responseDTO = RetweetConvertorDTO.toResponseDTO(retweet);
+        
+        // Retweet'i sil
+        retweetRepository.deleteById(retweetId);
+        
+        // Silinen retweet bilgilerini döndür
+        return responseDTO;
     }
 }

@@ -1,4 +1,4 @@
-package com.twitter.mavikus.dto;
+package com.twitter.mavikus.dto.tweet;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CommentUpdateDTO {
-    @NotBlank(message = "Yorum içeriği boş olamaz")
-    private String commentText;
+public class TweetCreateDTO {
+    @NotBlank(message = "Tweet içeriği boş olamaz")
+    private String content;
 }

@@ -1,6 +1,7 @@
 package com.twitter.mavikus.service;
 
-import com.twitter.mavikus.dto.RetweetCreateDTO;
+import com.twitter.mavikus.dto.retweet.RetweetCreateDTO;
+import com.twitter.mavikus.dto.retweet.RetweetResponseDTO;
 import com.twitter.mavikus.entity.Retweet;
 import com.twitter.mavikus.entity.User;
 
@@ -31,6 +32,9 @@ public interface RetweetService {
     // Bir tweet'i retweet etme
     Retweet createRetweet(RetweetCreateDTO retweetDTO, User user);
     
+    // Bir tweet'i retweet etme (DTO dönüşü)
+    RetweetResponseDTO createRetweetAndReturnDTO(RetweetCreateDTO retweetDTO, User user);
+    
     // Bir tweet'in retweet'lerini getirme
     List<Retweet> findRetweetsByTweetId(Long tweetId);
     
@@ -39,4 +43,7 @@ public interface RetweetService {
     
     // Retweet silme - sadece sahibi silebilir
     Retweet deleteRetweetByOwner(Long retweetId, Long userId);
+    
+    // Retweet silme - sadece sahibi silebilir (DTO dönüşü)
+    RetweetResponseDTO deleteRetweetByOwnerAndReturnDTO(Long retweetId, Long userId);
 }

@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +29,7 @@ public class Tweet {
     // ID değişkeni genelde Long olur. Eğer başka bir tür kullanıyorsan, bunu kendine göre değiştir.
 
     @ManyToOne // Birçok Tweet -> Bir Kullanıcı
+    @JsonBackReference // Bu, döngüsel referansı önlemek için kullanılır.
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -34,19 +38,22 @@ public class Tweet {
     private String content;
 
     @CreationTimestamp
-    @Column(name = "created_at")
+    @Column(name = "created_at") //, updatable = false) // updatable=false ekledim, bu alan güncellenmeyecek
     private Instant createdAt;
     
     @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Column(name = "updated_at") //, insertable = false) // insertable=false ekledim, bu alan ilk oluşturma sırasında veritabanı default değeri kullanılacak
     private Instant updatedAt;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "tweet")
+    @JsonManagedReference 
     List<Like> likes = new ArrayList<>();
     
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "tweet")
+    @JsonManagedReference 
     List<Comment> comments = new ArrayList<>();
     
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "originalTweet")
+    @JsonManagedReference 
     List<Retweet> retweets = new ArrayList<>();
 }

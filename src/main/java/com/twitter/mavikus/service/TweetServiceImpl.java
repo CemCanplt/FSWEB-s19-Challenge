@@ -1,8 +1,11 @@
 package com.twitter.mavikus.service;
 
-import com.twitter.mavikus.dto.TweetCreateDTO;
-import com.twitter.mavikus.dto.TweetResponseDTO;
-import com.twitter.mavikus.dto.TweetUpdateDTO;
+import com.twitter.mavikus.dto.tweet.TweetCreateDTO;
+import com.twitter.mavikus.dto.tweet.TweetConvertorDTO;
+import com.twitter.mavikus.dto.tweet.TweetDeleteResponseDTO;
+import com.twitter.mavikus.dto.tweet.TweetResponseDTO;
+import com.twitter.mavikus.dto.tweet.TweetUpdateDTO;
+import com.twitter.mavikus.dto.tweet.TweetUpdateResponseDTO;
 import com.twitter.mavikus.entity.Tweet;
 import com.twitter.mavikus.entity.User;
 import com.twitter.mavikus.exceptions.MaviKusErrorException;
@@ -14,10 +17,12 @@ import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -35,7 +40,8 @@ public class TweetServiceImpl implements TweetService {
     @Override
     @Transactional
     public Tweet findById(long id) {
-        return tweetRepository.findById(id).orElseThrow(()-> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: "+ id, HttpStatus.NOT_FOUND));
+        return tweetRepository.findById(id)
+                .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen tweet bulunamadı: " + id, HttpStatus.NOT_FOUND));
     }
 
     @Override
@@ -47,7 +53,7 @@ public class TweetServiceImpl implements TweetService {
     @Override
     @Transactional
     public Tweet deleteById(long id) {
-        Tweet tweet = tweetRepository.findById(id).orElseThrow(()-> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: "+ id, HttpStatus.NOT_FOUND));
+        Tweet tweet = findById(id);
         tweetRepository.deleteById(id);
         return tweet;
     }
@@ -55,10 +61,8 @@ public class TweetServiceImpl implements TweetService {
     @Override
     @Transactional
     public Tweet update(long id, String text) {
-        Tweet tweet = tweetRepository.findById(id).orElseThrow(()-> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: "+ id, HttpStatus.NOT_FOUND));
-
+        Tweet tweet = findById(id);
         tweet.setContent(text);
-
         return tweetRepository.save(tweet);
     }
 
@@ -82,87 +86,66 @@ public class TweetServiceImpl implements TweetService {
     @Override
     @Transactional
     public Map<String, Object> createTweetResponseMap(Tweet tweet, User user) {
-        // Tweet ve User bilgileriyle HTTP yanıtı için bir Map oluştur
         Map<String, Object> response = new HashMap<>();
         response.put("id", tweet.getId());
         response.put("content", tweet.getContent());
         response.put("createdAt", tweet.getCreatedAt());
-        response.put("userId", user.getId());
-        response.put("userName", user.getUsername());
         
+        Map<String, Object> userMap = new HashMap<>();
+        userMap.put("id", user.getId());
+        userMap.put("userName", user.getUsername());
+        userMap.put("email", user.getEmail());
+        
+        response.put("user", userMap);
         return response;
     }
 
     @Override
     @Transactional
     public List<Tweet> findTweetsByUserId(long userId) {
-        try {
-            // Kullanıcıyı bul - hata durumunda usersService zaten exception fırlatacak
-            User user = userService.findById(userId);
-            
-            // Kullanıcının tweetlerini getir ve createdAt tarihine göre en yeniden en eskiye sırala
-            return user.getTweets().stream()
-                    .sorted(Comparator.comparing(Tweet::getCreatedAt).reversed())
-                    .toList();
-        } catch (Exception e) {
-            // Eğer kullanıcı bulunamama hatası dışında bir hata varsa
-            if (!(e instanceof MaviKusErrorException)) {
-                throw new MaviKusErrorException("Kullanıcının tweetleri getirilirken bir hata oluştu: " + e.getMessage(), 
-                        HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            // MaviKusErrorException hatası doğrudan yeniden fırlat
-            throw e;
-        }
+        // Kullanıcının var olup olmadığını kontrol et
+        userService.findById(userId); // Bu metot kullanıcı bulamazsa MaviKusErrorException fırlatır
+        
+        // Kullanıcının tweetlerini getir ve oluşturulma tarihine göre tersten sırala (en yeniler önce)
+        return tweetRepository.findByUserId(userId).stream()
+                .sorted(Comparator.comparing(Tweet::getCreatedAt).reversed())
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public TweetResponseDTO getTweetWithDetails(long tweetId) {
-        // Tweet'i ID'ye göre veritabanından getir
-        Tweet tweet = tweetRepository.findById(tweetId)
-                .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: " + tweetId, HttpStatus.NOT_FOUND));
+        Tweet tweet = findById(tweetId);
         
-        // Eğer tweet'e ait ilişkiler LAZY yükleme yapıyorsa, bunları yükle
+        // Lazy loaded koleksiyonları yükle
         Hibernate.initialize(tweet.getLikes());
         Hibernate.initialize(tweet.getComments());
         Hibernate.initialize(tweet.getRetweets());
         
-        // Tweet'ten TweetResponseDTO'ya dönüştürme
-        TweetResponseDTO.UserDTO userDTO = TweetResponseDTO.UserDTO.builder()
-                .id(tweet.getUser().getId())
-                .userName(tweet.getUser().getUsername())
-                .email(tweet.getUser().getEmail())
-                .createdAt(tweet.getUser().getCreatedAt())
-                .build();
-        
-        return TweetResponseDTO.builder()
-                .id(tweet.getId())
-                .content(tweet.getContent())
-                .createdAt(tweet.getCreatedAt())
-                .user(userDTO)
-                .likes(tweet.getLikes())
-                .comments(tweet.getComments())
-                .retweets(tweet.getRetweets())
-                .build();
+        // TweetResponseDTO dönüştürme metodunu kullan
+        return TweetConvertorDTO.toResponseDTO(tweet);
     }
 
     @Override
     @Transactional
     public Tweet updateTweet(Long tweetId, TweetUpdateDTO tweetUpdateDTO, Long currentUserId) {
         // Tweet'i ID'ye göre bul
-        Tweet tweet = tweetRepository.findById(tweetId)
-                .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: " + tweetId, HttpStatus.NOT_FOUND));
+        Tweet tweet = findById(tweetId);
         
         // Tweet'i güncelleyen kullanıcının tweet sahibi olup olmadığını kontrol et
         if (!tweet.getUser().getId().equals(currentUserId)) {
-            throw new MaviKusErrorException("Bu tweeti güncelleme yetkiniz yok! Tweet sadece sahibi tarafından güncellenebilir.", 
-                                           HttpStatus.FORBIDDEN);
+            throw new MaviKusErrorException("Bu tweet'i güncelleme yetkiniz yok! Tweet sadece sahibi tarafından güncellenebilir.", 
+                                          HttpStatus.FORBIDDEN);
         }
         
-        // Tweet içeriğini güncelle
-        tweet.setContent(tweetUpdateDTO.getContent());
+        // Tweet içeriğini kontrol et
+        if (tweetUpdateDTO.getContent() == null || tweetUpdateDTO.getContent().trim().isEmpty()) {
+            throw new MaviKusErrorException("Tweet içeriği boş olamaz", HttpStatus.BAD_REQUEST);
+        }
         
-        // updatedAt alanı @UpdateTimestamp sayesinde otomatik güncellenecek
+        // Tweet'i güncelle
+        tweet.setContent(tweetUpdateDTO.getContent());
+        tweet.setUpdatedAt(Instant.now()); // Güncelleme zamanını ayarla
         
         // Güncellenmiş tweet'i kaydet ve döndür
         return tweetRepository.save(tweet);
@@ -170,20 +153,45 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     @Transactional
-    public Tweet deleteTweetByOwner(Long tweetId, Long userId) {
-        // Tweet'i ID'ye göre bul
-        Tweet tweet = tweetRepository.findById(tweetId)
-                .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: " + tweetId, HttpStatus.NOT_FOUND));
+    public List<TweetResponseDTO> findTweetDTOsByUserId(long userId) {
+        // Kullanıcının tweetlerini getir
+        List<Tweet> tweets = findTweetsByUserId(userId);
         
-        // Tweet'in sahibi bu kullanıcı mı kontrol et
-        if (!tweet.getUser().getId().equals(userId)) {
-            throw new MaviKusErrorException("Bu tweeti silme yetkiniz yok! Tweet sadece sahibi tarafından silinebilir.", HttpStatus.FORBIDDEN);
+        // Tweet'leri DTO'lara dönüştür
+        return tweets.stream()
+                .map(TweetConvertorDTO::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public TweetUpdateResponseDTO updateTweetSimple(Long tweetId, TweetUpdateDTO tweetUpdateDTO, Long currentUserId) {
+        // Tweet'i güncelle
+        Tweet updatedTweet = updateTweet(tweetId, tweetUpdateDTO, currentUserId);
+        
+        // Güncellenmiş tweet'ten TweetUpdateResponseDTO oluştur
+        return TweetConvertorDTO.toUpdateResponseDTO(updatedTweet);
+    }
+
+    @Override
+    @Transactional
+    public TweetDeleteResponseDTO deleteTweetAndReturnDTO(Long tweetId, Long currentUserId) {
+        // Tweet'i ID'ye göre bul
+        Tweet tweet = findById(tweetId);
+        
+        // Tweet'i silen kullanıcının tweet sahibi olup olmadığını kontrol et
+        if (!tweet.getUser().getId().equals(currentUserId)) {
+            throw new MaviKusErrorException("Bu tweet'i silme yetkiniz yok! Tweet sadece sahibi tarafından silinebilir.", 
+                                          HttpStatus.FORBIDDEN);
         }
+        
+        // Silme işleminden önce tweet bilgilerini sakla
+        TweetDeleteResponseDTO responseDTO = TweetConvertorDTO.toDeleteResponseDTO(tweet);
         
         // Tweet'i sil
         tweetRepository.deleteById(tweetId);
         
-        // Silinen tweet'i döndür
-        return tweet;
+        // Silme bilgilerini içeren DTO'yu döndür
+        return responseDTO;
     }
 }
