@@ -1,91 +1,93 @@
 package com.twitter.mavikus.service;
 
 import com.twitter.mavikus.dto.TweetCreateDTO;
+import com.twitter.mavikus.dto.TweetResponseDTO;
 import com.twitter.mavikus.dto.TweetUpdateDTO;
-import com.twitter.mavikus.entity.Tweets;
-import com.twitter.mavikus.entity.Users;
+import com.twitter.mavikus.entity.Tweet;
+import com.twitter.mavikus.entity.User;
 import com.twitter.mavikus.exceptions.MaviKusErrorException;
-import com.twitter.mavikus.repository.TweetsRepository;
+import com.twitter.mavikus.repository.TweetRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+
+import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 
 @AllArgsConstructor
 @Service
-public class TweetsServiceImpl implements TweetsService {
+public class TweetServiceImpl implements TweetService {
 
-    private final TweetsRepository tweetsRepository;
-    private final UsersService usersService;
+    private final TweetRepository tweetRepository;
+    private final UserService userService;
 
     @Override
     @Transactional
-    public List<Tweets> findAll() {
-        return tweetsRepository.findAll();
+    public List<Tweet> findAll() {
+        return tweetRepository.findAll();
     }
 
     @Override
     @Transactional
-    public Tweets findById(long id) {
-        return tweetsRepository.findById(id).orElseThrow(()-> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: "+ id, HttpStatus.NOT_FOUND));
+    public Tweet findById(long id) {
+        return tweetRepository.findById(id).orElseThrow(()-> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: "+ id, HttpStatus.NOT_FOUND));
     }
 
     @Override
     @Transactional
-    public Tweets save(Tweets instanceOfTweets) {
-        return tweetsRepository.save(instanceOfTweets);
+    public Tweet save(Tweet instanceOfTweet) {
+        return tweetRepository.save(instanceOfTweet);
     }
 
     @Override
     @Transactional
-    public Tweets deleteById(long id) {
-        Tweets tweet = tweetsRepository.findById(id).orElseThrow(()-> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: "+ id, HttpStatus.NOT_FOUND));
-        tweetsRepository.deleteById(id);
+    public Tweet deleteById(long id) {
+        Tweet tweet = tweetRepository.findById(id).orElseThrow(()-> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: "+ id, HttpStatus.NOT_FOUND));
+        tweetRepository.deleteById(id);
         return tweet;
     }
 
     @Override
     @Transactional
-    public Tweets update(long id, String text) {
-        Tweets tweet = tweetsRepository.findById(id).orElseThrow(()-> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: "+ id, HttpStatus.NOT_FOUND));
+    public Tweet update(long id, String text) {
+        Tweet tweet = tweetRepository.findById(id).orElseThrow(()-> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: "+ id, HttpStatus.NOT_FOUND));
 
         tweet.setContent(text);
 
-        return tweetsRepository.save(tweet);
+        return tweetRepository.save(tweet);
     }
-    
+
     @Override
     @Transactional
-    public Tweets createTweet(TweetCreateDTO tweetDTO) {
-        // Kullanıcı var mı kontrol et - hata durumunda usersService zaten exception fırlatacak
-        Users user = usersService.findById(tweetDTO.getUserId());
-        
+    public Tweet createTweet(TweetCreateDTO tweetDTO, User user) {
         // Tweet içeriği kontrolü (Validation anotasyonları ile zaten kontrol ediliyor ama ekstra kontrol)
         if (tweetDTO.getContent() == null || tweetDTO.getContent().trim().isEmpty()) {
             throw new MaviKusErrorException("Tweet içeriği boş olamaz", HttpStatus.BAD_REQUEST);
         }
 
         // Yeni tweet nesnesi oluştur
-        Tweets tweet = new Tweets();
+        Tweet tweet = new Tweet();
         tweet.setContent(tweetDTO.getContent());
         tweet.setUser(user);
         
         // Tweet'i kaydet ve döndür
-        return tweetsRepository.save(tweet);
+        return tweetRepository.save(tweet);
     }
 
-    // Belki güncellerim, garanti değil
     @Override
     @Transactional
-    public List<Tweets> findTweetsByUserId(long userId) {
+    public List<Tweet> findTweetsByUserId(long userId) {
         try {
             // Kullanıcıyı bul - hata durumunda usersService zaten exception fırlatacak
-            Users user = usersService.findById(userId);
+            User user = userService.findById(userId);
             
-            // Kullanıcının tweetlerini getir
-            return user.getTweets().stream().toList();
+            // Kullanıcının tweetlerini getir ve createdAt tarihine göre en yeniden en eskiye sırala
+            return user.getTweets().stream()
+                    .sorted(Comparator.comparing(Tweet::getCreatedAt).reversed())
+                    .toList();
         } catch (Exception e) {
             // Eğer kullanıcı bulunamama hatası dışında bir hata varsa
             if (!(e instanceof MaviKusErrorException)) {
@@ -99,31 +101,40 @@ public class TweetsServiceImpl implements TweetsService {
 
     @Override
     @Transactional
-    public Tweets getTweetWithDetails(long tweetId) {
+    public TweetResponseDTO getTweetWithDetails(long tweetId) {
         // Tweet'i ID'ye göre veritabanından getir
-        Tweets tweet = tweetsRepository.findById(tweetId)
+        Tweet tweet = tweetRepository.findById(tweetId)
                 .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: " + tweetId, HttpStatus.NOT_FOUND));
         
         // Eğer tweet'e ait ilişkiler LAZY yükleme yapıyorsa, bunları yükle
-        // Hibernate.initialize(tweet.getLikes());
-        // Hibernate.initialize(tweet.getComments());
+        Hibernate.initialize(tweet.getLikes());
+        Hibernate.initialize(tweet.getComments());
+        Hibernate.initialize(tweet.getRetweets());
         
-        return tweet;
+        // Tweet'ten TweetResponseDTO'ya dönüştürme
+        TweetResponseDTO.UserDTO userDTO = TweetResponseDTO.UserDTO.builder()
+                .id(tweet.getUser().getId())
+                .userName(tweet.getUser().getUsername())
+                .email(tweet.getUser().getEmail())
+                .createdAt(tweet.getUser().getCreatedAt())
+                .build();
         
-        /* 
-         * Not: Eğer tweet entity'niz içinde likes, comments, retweets gibi ilişkiler varsa
-         * ve bunlar LAZY olarak yükleniyorsa, yukarıdaki gibi initialize etmelisiniz.
-         * 
-         * Ya da Repository'de özel bir sorgu yazarak ilişkili nesneleri JOIN ile getirebilirsiniz:
-         * Örnek: tweetsRepository.findTweetWithDetailsById(tweetId);
-         */
+        return TweetResponseDTO.builder()
+                .id(tweet.getId())
+                .content(tweet.getContent())
+                .createdAt(tweet.getCreatedAt())
+                .user(userDTO)
+                .likes(tweet.getLikes())
+                .comments(tweet.getComments())
+                .retweets(tweet.getRetweets())
+                .build();
     }
 
     @Override
     @Transactional
-    public Tweets updateTweet(Long id, TweetUpdateDTO tweetUpdateDTO) {
+    public Tweet updateTweet(Long id, TweetUpdateDTO tweetUpdateDTO) {
         // Tweet'i ID'ye göre bul
-        Tweets tweet = tweetsRepository.findById(id)
+        Tweet tweet = tweetRepository.findById(id)
                 .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: " + id, HttpStatus.NOT_FOUND));
         
         // Not: Gerçek bir uygulamada, giriş yapmış kullanıcının tweet sahibi olup olmadığını kontrol etmelisiniz.
@@ -136,14 +147,14 @@ public class TweetsServiceImpl implements TweetsService {
         tweet.setContent(tweetUpdateDTO.getContent());
         
         // Güncellenmiş tweet'i kaydet ve döndür
-        return tweetsRepository.save(tweet);
+        return tweetRepository.save(tweet);
     }
 
     @Override
     @Transactional
-    public Tweets deleteTweetByOwner(Long tweetId, Long userId) {
+    public Tweet deleteTweetByOwner(Long tweetId, Long userId) {
         // Tweet'i ID'ye göre bul
-        Tweets tweet = tweetsRepository.findById(tweetId)
+        Tweet tweet = tweetRepository.findById(tweetId)
                 .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: " + tweetId, HttpStatus.NOT_FOUND));
         
         // Tweet'in sahibi bu kullanıcı mı kontrol et
@@ -152,7 +163,7 @@ public class TweetsServiceImpl implements TweetsService {
         }
         
         // Tweet'i sil
-        tweetsRepository.deleteById(tweetId);
+        tweetRepository.deleteById(tweetId);
         
         // Silinen tweet'i döndür
         return tweet;

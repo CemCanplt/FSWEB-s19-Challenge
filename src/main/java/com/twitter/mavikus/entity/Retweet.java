@@ -12,8 +12,8 @@ import java.time.Instant;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "retweets", schema = "public")
-public class Retweets {
+@Table(name = "retweet", schema = "public")
+public class Retweet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,16 +21,15 @@ public class Retweets {
     private Long id;
     // ID değişkeni genelde Long olur. Eğer başka bir tür kullanıyorsan, bunu kendine göre değiştir.
 
-    @Column(name = "original_tweet_id")
-    private long originalTweetId;
+    @ManyToOne // Birçok Retweet -> Bir Tweet (Orijinal Tweet)
+    @JoinColumn(name = "original_tweet_id", nullable = false)
+    private Tweet originalTweet;
 
-    @ManyToOne // Birçok Tweet -> Bir Kullanıcı
+    @ManyToOne // Birçok Retweet -> Bir Kullanıcı
     @JoinColumn(name = "user_id", nullable = false)
-    private Users user;
+    private User user;
 
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;
-
-
 }

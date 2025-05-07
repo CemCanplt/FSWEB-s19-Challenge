@@ -1,6 +1,6 @@
 package com.twitter.mavikus.controller;
 
-import com.twitter.mavikus.service.UsersService;
+import com.twitter.mavikus.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 @RestController
 @Validated
-public class UsersController {
+public class UserController {
 
-    private final UsersService userService;
+    private final UserService userService;
     // Bu genelde bir service olur.
 
 }

@@ -8,18 +8,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-
-
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "users", schema = "public")
-public class Users {
+@Table(name = "user", schema = "public")
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,7 +50,7 @@ public class Users {
     // Default olarak LAZY gelir.
     // mappedBy="karşıdaki_ManyToOne_alanının_adı"
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
-    List<Tweets> tweets = new ArrayList<>();
+    List<Tweet> tweets = new ArrayList<>();
 
     // İsteğe bağlı olarak, ilişkiyi her iki taraftan da kurmaya yardımcı metodlar (Bu en iyi pratiktir)
 //    public void addTweet(Tweets tweet) {
@@ -69,12 +68,49 @@ public class Users {
 //    }
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
-    List<Likes> likes = new ArrayList<>();
+    List<Like> likes = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
-    List<Comments> comments = new ArrayList<>();
+    List<Comment> comments = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
-    List<Retweets> retweets = new ArrayList<>();
+    List<Retweet> retweets = new ArrayList<>();
 
+    // CascadeType.ALL, CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH
+    // @ManyToMany olmayanlar için :@join:c yazabilirsin.
+    // Default olarak FetchType.LAZY gelir.
+    // Güvenlik işlemleri genelde FetchType.EAGER olur.
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.EAGER)
+    @JoinTable(name = "user_role", schema = "public", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    Set<Role> roles = new HashSet<>();
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles;
+    }
+
+    @Override
+    public String getUsername() {
+        return userName;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // UserDetails.super.isAccountNonExpired();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true; // UserDetails.super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true; // UserDetails.super.isCredentialsNonExpired();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true; // UserDetails.super.isEnabled();
+    }
 }

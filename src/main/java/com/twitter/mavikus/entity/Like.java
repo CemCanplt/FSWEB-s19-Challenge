@@ -2,7 +2,6 @@ package com.twitter.mavikus.entity;
 
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "likes", schema = "public")
-public class Likes {
+@Table(name = "like", schema = "public")
+public class Like {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,12 +21,12 @@ public class Likes {
 
     @ManyToOne
     @JoinColumn(name = "tweet_id", nullable = false)
-    private Tweets tweets;
+    private Tweet tweet;
 
     // CascadeType.ALL, CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH
     // @ManyToMany için :@join:t yazabilirsin.
     // Default olarak LAZY gelir.
-    @ManyToOne // Birçok Tweet -> Bir Kullanıcı
+    @ManyToOne // Birçok Like -> Bir Kullanıcı
     @JoinColumn(name = "user_id", nullable = false)
-    private Users user;
+    private User user;
 }

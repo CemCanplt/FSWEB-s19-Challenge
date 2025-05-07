@@ -1,7 +1,7 @@
 package com.twitter.mavikus.service;
 
-import com.twitter.mavikus.entity.Likes;
-import com.twitter.mavikus.repository.LikesRepository;
+import com.twitter.mavikus.entity.Comment;
+import com.twitter.mavikus.repository.CommentRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -9,28 +9,28 @@ import java.util.List;
 
 @AllArgsConstructor
 @Service
-public class LikesServiceImpl implements LikesService {
+public class CommentServiceImpl implements CommentService {
 
     // Bu genelde bir repository olur.
-    private final LikesRepository likesRepository;
+    private final CommentRepository commentRepository;
 
     @Override
-    public List<Likes> findAll() {
+    public List<Comment> findAll() {
         return List.of();
     }
 
     @Override
-    public Likes findById(long id) {
+    public Comment findById(long id) {
         return null;
     }
 
     @Override
-    public Likes save(Likes instanceOfLikes) {
+    public Comment save(Comment instanceOfComment) {
         return null;
     }
 
     @Override
-    public Likes deleteById(long id) {
+    public Comment deleteById(long id) {
         return null;
     }
 }
