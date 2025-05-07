@@ -1,6 +1,8 @@
 package com.twitter.mavikus.service;
 
+import com.twitter.mavikus.dto.RetweetCreateDTO;
 import com.twitter.mavikus.entity.Retweet;
+import com.twitter.mavikus.entity.User;
 
 import java.util.List;
 
@@ -25,4 +27,16 @@ public interface RetweetService {
     // Delete: Belirli bir ID'ye sahip Retweets öğesini sil
     // Retweets ID'sinin Long olduğunu varsayıyoruz
     Retweet deleteById(long id);
+    
+    // Bir tweet'i retweet etme
+    Retweet createRetweet(RetweetCreateDTO retweetDTO, User user);
+    
+    // Bir tweet'in retweet'lerini getirme
+    List<Retweet> findRetweetsByTweetId(Long tweetId);
+    
+    // Bir kullanıcının retweet'lerini getirme
+    List<Retweet> findRetweetsByUserId(Long userId);
+    
+    // Retweet silme - sadece sahibi silebilir
+    Retweet deleteRetweetByOwner(Long retweetId, Long userId);
 }

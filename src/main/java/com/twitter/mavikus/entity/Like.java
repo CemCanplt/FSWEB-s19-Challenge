@@ -15,7 +15,7 @@ public class Like {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "likes_id")
+    @Column(name = "like_id")
     private Long id;
     // ID değişkeni genelde Long olur. Eğer başka bir tür kullanıyorsan, bunu kendine göre değiştir.
 

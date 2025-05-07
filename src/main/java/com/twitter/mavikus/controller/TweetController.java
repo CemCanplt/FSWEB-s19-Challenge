@@ -47,16 +47,24 @@ public class TweetController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Tweet> updateTweet(@PathVariable Long id, @RequestBody @Valid TweetUpdateDTO tweetUpdateDTO) {
-        // Service katmanına iş mantığını devret
-        Tweet updatedTweet = tweetService.updateTweet(id, tweetUpdateDTO);
+    public ResponseEntity<Tweet> updateTweet(@PathVariable Long id, 
+                                            @RequestBody @Valid TweetUpdateDTO tweetUpdateDTO, 
+                                            Authentication authentication) {
+        // Giriş yapmış kullanıcıyı al
+        User currentUser = (User) authentication.getPrincipal();
+        
+        // Service katmanına iş mantığını devret, kullanıcı ID'sini de geçiriyoruz
+        Tweet updatedTweet = tweetService.updateTweet(id, tweetUpdateDTO, currentUser.getId());
         return ResponseEntity.ok(updatedTweet);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Tweet> deleteTweet(@PathVariable Long id, @RequestParam Long userId) {
-        // Service katmanına iş mantığını devret
-        Tweet deletedTweet = tweetService.deleteTweetByOwner(id, userId);
+    public ResponseEntity<Tweet> deleteTweet(@PathVariable Long id, Authentication authentication) {
+        // Giriş yapmış kullanıcıyı al
+        User currentUser = (User) authentication.getPrincipal();
+        
+        // Service katmanına iş mantığını devret, kullanıcı ID'sini de geçiriyoruz
+        Tweet deletedTweet = tweetService.deleteTweetByOwner(id, currentUser.getId());
         return ResponseEntity.ok(deletedTweet);
     }
 }

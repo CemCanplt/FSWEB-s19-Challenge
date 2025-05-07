@@ -132,19 +132,21 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     @Transactional
-    public Tweet updateTweet(Long id, TweetUpdateDTO tweetUpdateDTO) {
+    public Tweet updateTweet(Long tweetId, TweetUpdateDTO tweetUpdateDTO, Long currentUserId) {
         // Tweet'i ID'ye göre bul
-        Tweet tweet = tweetRepository.findById(id)
-                .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: " + id, HttpStatus.NOT_FOUND));
+        Tweet tweet = tweetRepository.findById(tweetId)
+                .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen Tweet bulunamadı: " + tweetId, HttpStatus.NOT_FOUND));
         
-        // Not: Gerçek bir uygulamada, giriş yapmış kullanıcının tweet sahibi olup olmadığını kontrol etmelisiniz.
-        // Örnek: Bu tweet giriş yapmış kullanıcıya ait mi?
-        // if (!tweet.getUser().getId().equals(loggedInUser.getId())) {
-        //    throw new MaviKusErrorException("Bu tweeti güncelleme yetkiniz yok!", HttpStatus.FORBIDDEN);
-        // }
+        // Tweet'i güncelleyen kullanıcının tweet sahibi olup olmadığını kontrol et
+        if (!tweet.getUser().getId().equals(currentUserId)) {
+            throw new MaviKusErrorException("Bu tweeti güncelleme yetkiniz yok! Tweet sadece sahibi tarafından güncellenebilir.", 
+                                           HttpStatus.FORBIDDEN);
+        }
         
         // Tweet içeriğini güncelle
         tweet.setContent(tweetUpdateDTO.getContent());
+        
+        // updatedAt alanı @UpdateTimestamp sayesinde otomatik güncellenecek
         
         // Güncellenmiş tweet'i kaydet ve döndür
         return tweetRepository.save(tweet);

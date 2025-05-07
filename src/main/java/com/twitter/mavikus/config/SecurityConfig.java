@@ -11,6 +11,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
@@ -26,6 +31,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         // csrf(AbstractHttpConfigurer::disable) = csrf(csrf -> csrf.disable())
         return httpSecurity.csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults()) // CORS yapılandırmasını aktif et
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("/register/**", "/login/**").permitAll();
                     auth.requestMatchers("/tweet/**").authenticated();
@@ -40,6 +46,22 @@ public class SecurityConfig {
                 .build();
     }
 
+    /*
+    @Bean // CORS yapılandırması için yeni metod
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3200")); // React uygulamasının adresi
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L); // 1 saat
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+    */
+
     @Bean // Güvenliğin Veritanı ile çalıştığını sisteme söyler.
     public AuthenticationManager authManager(UserDetailsService userDetailsService){
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -47,5 +69,4 @@ public class SecurityConfig {
         provider.setPasswordEncoder(passwordEncoder());
         return new ProviderManager(provider);
     }
-
 }

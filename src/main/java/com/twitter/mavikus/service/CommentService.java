@@ -1,6 +1,9 @@
 package com.twitter.mavikus.service;
 
+import com.twitter.mavikus.dto.CommentCreateDTO;
+import com.twitter.mavikus.dto.CommentUpdateDTO;
 import com.twitter.mavikus.entity.Comment;
+import com.twitter.mavikus.entity.User;
 
 import java.util.List;
 
@@ -25,4 +28,14 @@ public interface CommentService {
     // Delete: Belirli bir ID'ye sahip Comments öğesini sil
     // Comments ID'sinin Long olduğunu varsayıyoruz
     Comment deleteById(long id);
+    
+    // Yeni yorum oluşturma metodu
+    Comment createComment(CommentCreateDTO commentDTO, User user);
+
+    // Yorum güncelleme metodu (yorum ID, güncelleme DTO ve kullanıcı kimliği)
+    Comment updateComment(Long commentId, CommentUpdateDTO commentUpdateDTO, Long currentUserId);
+
+    // Yorum silme metodu (yorum ID ve kullanıcı kimliği)
+    // Yorumu sadece yorumun sahibi veya tweeti yazan kişi silebilir
+    Comment deleteCommentByOwner(Long commentId, Long currentUserId);
 }

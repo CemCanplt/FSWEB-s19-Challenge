@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -35,6 +36,10 @@ public class Tweet {
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;
+    
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "tweet")
     List<Like> likes = new ArrayList<>();

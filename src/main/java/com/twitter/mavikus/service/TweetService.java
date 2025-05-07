@@ -39,11 +39,11 @@ public interface TweetService {
     // Bir tweet'in tüm detaylarını getir - artık TweetResponseDTO döndürüyor
     TweetResponseDTO getTweetWithDetails(long tweetId);
     
-    // Tweet güncelleme için yeni metod (DTO kullanarak)
-    Tweet updateTweet(Long id, TweetUpdateDTO tweetUpdateDTO);
+    // Tweet güncelleme için yeni metod (DTO ve kullanıcı kimliği kullanarak)
+    Tweet updateTweet(Long tweetId, TweetUpdateDTO tweetUpdateDTO, Long currentUserId);
     
-    // Tweet silme - sadece sahibi silebilir
-    Tweet deleteTweetByOwner(Long tweetId, Long userId);
+    // Tweet silme - sadece sahibi silebilir (currentUserId ile)
+    Tweet deleteTweetByOwner(Long tweetId, Long currentUserId);
     
     // Kullanıcı kimliğini doğrudan alan yeni metod
     Tweet createTweet(TweetCreateDTO tweetDTO, User user);
