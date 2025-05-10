@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -48,11 +50,10 @@ class LikeServiceImplTest {
 
     @DisplayName("Tüm beğenileri başarıyla getirmeli")
     @Test
-    void findAll() {
+    void findAll_ShouldReturnAllLikes() {
         // Given
         List<Like> likes = new ArrayList<>();
         when(likeRepository.findAll()).thenReturn(likes);
-        // Given da diyebilirdik when yerine, aynı kapıya çıkıyor.
         
         // When
         List<Like> result = likeService.findAll();
@@ -64,7 +65,7 @@ class LikeServiceImplTest {
 
     @DisplayName("Geçerli ID ile beğeni bulabilmeli")
     @Test
-    void findById() {
+    void findById_WithValidId_ShouldReturnLike() {
         // Given
         Long likeId = 1L;
         Like like = new Like();
@@ -82,7 +83,7 @@ class LikeServiceImplTest {
     
     @DisplayName("Geçersiz ID ile beğeni bulamadığında hata fırlatmalı")
     @Test
-    void findByIdException() {
+    void findById_WithInvalidId_ShouldThrowException() {
         // Given
         Long likeId = 999L;
         when(likeRepository.findById(likeId)).thenReturn(Optional.empty());
@@ -92,9 +93,6 @@ class LikeServiceImplTest {
             .isInstanceOf(MaviKusErrorException.class)
             .hasMessageContaining("Bu id ile eşleşen beğeni bulunamadı")
             .hasFieldOrPropertyWithValue("httpStatus", HttpStatus.NOT_FOUND);
-        
-        // verify(likeRepository, never()).findById(likeId);
-        // never() ile hiç çağrılmadığını kontrol edebilirdik ama Service içinde hata almak için bunun çağrılması lazımmış.
     }
 
     @DisplayName("Beğeni kaydedebilmeli")
