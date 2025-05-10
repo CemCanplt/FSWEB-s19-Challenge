@@ -3,55 +3,70 @@ package com.twitter.mavikus.repository;
 import com.twitter.mavikus.entity.Like;
 import com.twitter.mavikus.entity.Tweet;
 import com.twitter.mavikus.entity.User;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.context.SpringBootTest;
 
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
+// @DataJpaTest
+// @AutoConfigureTestDatabase(replace = Replace.ANY) // Gömülü veritabanı kullanımını etkinleştir
+@SpringBootTest
 class LikeRepositoryTest {
 
     @Autowired
     private LikeRepository likeRepository;
+
+    @Autowired
+    private UserRepository userRepository;
     
     @Autowired
-    private TestEntityManager entityManager;
-    
+    private TweetRepository tweetRepository;
+
     private User testUser;
     private Tweet testTweet;
     private Like testLike;
-    
+     
     @BeforeEach
     void setUp() {
-        
-        // Test için gerekli olan kullanıcı oluşturalım
+        // Test için gerekli olan kullanıcı oluşturalım ve kaydedelim
         testUser = new User();
         testUser.setUserName("testUser");
         testUser.setPassword("password");
         testUser.setEmail("test@example.com");
-        entityManager.persist(testUser);
+        // User nesnesinde Role koleksiyonu varsa boş bir koleksiyon oluştur
+        if (testUser.getRoles() == null) {
+            testUser.setRoles(new HashSet<>());
+        }
+        testUser = userRepository.save(testUser);
         
-        // Test için gerekli olan tweet oluşturalım
+        // Test için gerekli olan tweet oluşturalım ve kaydedelim
         testTweet = new Tweet();
         testTweet.setContent("Test tweet içeriği");
         testTweet.setUser(testUser);
-        entityManager.persist(testTweet);
+        testTweet = tweetRepository.save(testTweet);
         
-        // Test için gerekli olan beğeni oluşturalım
+        // Test için gerekli olan beğeni oluşturalım ve kaydedelim
         testLike = new Like();
         testLike.setTweet(testTweet);
         testLike.setUser(testUser);
-        entityManager.persist(testLike);
-        
-        // EntityManager'daki değişiklikleri veritabanına yansıtalım
-        entityManager.flush();
+        testLike = likeRepository.save(testLike);
+    }
+    
+    @AfterEach
+    void tearDown() {
+        // Test sonrası verileri temizle
+        likeRepository.deleteAll();
+        tweetRepository.deleteAll();
+        userRepository.deleteAll();
     }
     
     @DisplayName("Belirli bir tweet ve kullanıcıya ait beğeni kaydını bulabilmeli")

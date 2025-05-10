@@ -20,7 +20,7 @@ import java.util.*;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "user", schema = "public")
+@Table(name = "\"user\"", schema = "public")
 public class User implements UserDetails {
 
     @Id

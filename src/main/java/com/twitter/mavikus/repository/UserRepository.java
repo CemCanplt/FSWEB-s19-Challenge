@@ -2,8 +2,6 @@ package com.twitter.mavikus.repository;
 
 import com.twitter.mavikus.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 

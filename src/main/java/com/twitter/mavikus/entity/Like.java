@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "like", schema = "public")
+@Table(name = "\"like\"", schema = "public")
 public class Like {
 
     @Id
