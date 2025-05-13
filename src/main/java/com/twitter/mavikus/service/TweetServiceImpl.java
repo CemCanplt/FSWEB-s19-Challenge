@@ -4,6 +4,7 @@ import com.twitter.mavikus.dto.tweet.TweetCreateDTO;
 import com.twitter.mavikus.dto.tweet.TweetConvertorDTO;
 import com.twitter.mavikus.dto.tweet.TweetDeleteResponseDTO;
 import com.twitter.mavikus.dto.tweet.TweetResponseDTO;
+import com.twitter.mavikus.dto.tweet.TweetSimpleDTO;
 import com.twitter.mavikus.dto.tweet.TweetUpdateDTO;
 import com.twitter.mavikus.dto.tweet.TweetUpdateResponseDTO;
 import com.twitter.mavikus.entity.Tweet;
@@ -33,12 +34,6 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     @Transactional
-    public List<Tweet> findAll() {
-        return tweetRepository.findAll();
-    }
-
-    @Override
-    @Transactional
     public Tweet findById(long id) {
         return tweetRepository.findById(id)
                 .orElseThrow(() -> new MaviKusErrorException("Bu id ile eşleşen tweet bulunamadı: " + id, HttpStatus.NOT_FOUND));
@@ -46,24 +41,14 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     @Transactional
-    public Tweet save(Tweet instanceOfTweet) {
-        return tweetRepository.save(instanceOfTweet);
-    }
-
-    @Override
-    @Transactional
-    public Tweet deleteById(long id) {
-        Tweet tweet = findById(id);
-        tweetRepository.deleteById(id);
-        return tweet;
-    }
-
-    @Override
-    @Transactional
-    public Tweet update(long id, String text) {
-        Tweet tweet = findById(id);
-        tweet.setContent(text);
-        return tweetRepository.save(tweet);
+    public List<Tweet> findTweetsByUserId(long userId) {
+        // Kullanıcının var olup olmadığını kontrol et
+        userService.findById(userId); // Bu metot kullanıcı bulamazsa MaviKusErrorException fırlatır
+        
+        // Kullanıcının tweetlerini getir ve oluşturulma tarihine göre tersten sırala (en yeniler önce)
+        return tweetRepository.findByUserId(userId).stream()
+                .sorted(Comparator.comparing(Tweet::getCreatedAt).reversed())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -102,18 +87,6 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     @Transactional
-    public List<Tweet> findTweetsByUserId(long userId) {
-        // Kullanıcının var olup olmadığını kontrol et
-        userService.findById(userId); // Bu metot kullanıcı bulamazsa MaviKusErrorException fırlatır
-        
-        // Kullanıcının tweetlerini getir ve oluşturulma tarihine göre tersten sırala (en yeniler önce)
-        return tweetRepository.findByUserId(userId).stream()
-                .sorted(Comparator.comparing(Tweet::getCreatedAt).reversed())
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
     public TweetResponseDTO getTweetWithDetails(long tweetId) {
         Tweet tweet = findById(tweetId);
         
@@ -128,8 +101,8 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     @Transactional
-    public Tweet updateTweet(Long tweetId, TweetUpdateDTO tweetUpdateDTO, Long currentUserId) {
-        // Tweet'i ID'ye göre bul
+    public TweetUpdateResponseDTO updateTweetSimple(Long tweetId, TweetUpdateDTO tweetUpdateDTO, Long currentUserId) {
+        // Tweet'i güncelle
         Tweet tweet = findById(tweetId);
         
         // Tweet'i güncelleyen kullanıcının tweet sahibi olup olmadığını kontrol et
@@ -147,27 +120,8 @@ public class TweetServiceImpl implements TweetService {
         tweet.setContent(tweetUpdateDTO.getContent());
         tweet.setUpdatedAt(Instant.now()); // Güncelleme zamanını ayarla
         
-        // Güncellenmiş tweet'i kaydet ve döndür
-        return tweetRepository.save(tweet);
-    }
-
-    @Override
-    @Transactional
-    public List<TweetResponseDTO> findTweetDTOsByUserId(long userId) {
-        // Kullanıcının tweetlerini getir
-        List<Tweet> tweets = findTweetsByUserId(userId);
-        
-        // Tweet'leri DTO'lara dönüştür
-        return tweets.stream()
-                .map(TweetConvertorDTO::toResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public TweetUpdateResponseDTO updateTweetSimple(Long tweetId, TweetUpdateDTO tweetUpdateDTO, Long currentUserId) {
-        // Tweet'i güncelle
-        Tweet updatedTweet = updateTweet(tweetId, tweetUpdateDTO, currentUserId);
+        // Güncellenmiş tweet'i kaydet
+        Tweet updatedTweet = tweetRepository.save(tweet);
         
         // Güncellenmiş tweet'ten TweetUpdateResponseDTO oluştur
         return TweetConvertorDTO.toUpdateResponseDTO(updatedTweet);
@@ -193,5 +147,17 @@ public class TweetServiceImpl implements TweetService {
         
         // Silme bilgilerini içeren DTO'yu döndür
         return responseDTO;
+    }
+
+    @Override
+    @Transactional
+    public List<TweetSimpleDTO> findTweetSimpleDTOsByUserId(long userId) {
+        // Kullanıcının tweetlerini getir
+        List<Tweet> tweets = findTweetsByUserId(userId);
+        
+        // Tweet'leri basit DTO'lara dönüştür
+        return tweets.stream()
+                .map(TweetConvertorDTO::toSimpleDTO)
+                .collect(Collectors.toList());
     }
 }

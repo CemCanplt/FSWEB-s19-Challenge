@@ -3,6 +3,7 @@ package com.twitter.mavikus.controller;
 import com.twitter.mavikus.dto.tweet.TweetCreateDTO;
 import com.twitter.mavikus.dto.tweet.TweetDeleteResponseDTO;
 import com.twitter.mavikus.dto.tweet.TweetResponseDTO;
+import com.twitter.mavikus.dto.tweet.TweetSimpleDTO;
 import com.twitter.mavikus.dto.tweet.TweetUpdateDTO;
 import com.twitter.mavikus.dto.tweet.TweetUpdateResponseDTO;
 import com.twitter.mavikus.entity.Tweet;
@@ -47,17 +48,15 @@ public class TweetController {
         // Service katmanına iş mantığını devret
         TweetResponseDTO tweet = tweetService.getTweetWithDetails(tweetId);
         return ResponseEntity.ok(tweet);
-    }
-
-    /**
-     * Yeni eklenen endpoint - DTO formatında dönüş yapar ve auth gerektirmez (public)
-     * Bu metod sonsuz rekürsiyon sorununu çözer ve hassas verileri gizler
+    }    /**
+     * Yeni eklenen endpoint - Basit DTO formatında dönüş yapar ve auth gerektirmez (public)
+     * Bu metod sadece tweet id ve içeriğini döndürür, gereksiz veri trafiği önler
      */
     @GetMapping("/findByUserId")
-    public ResponseEntity<List<TweetResponseDTO>> getAllTweetsByUserId(@RequestParam long userId) {
+    public ResponseEntity<List<TweetSimpleDTO>> getAllTweetsByUserId(@RequestParam long userId) {
         // Service katmanına iş mantığını devret
-        List<TweetResponseDTO> tweetDTOs = tweetService.findTweetDTOsByUserId(userId);
-        return ResponseEntity.ok(tweetDTOs);
+        List<TweetSimpleDTO> tweetSimpleDTOs = tweetService.findTweetSimpleDTOsByUserId(userId);
+        return ResponseEntity.ok(tweetSimpleDTOs);
     }
 
     @PutMapping("/{id}")

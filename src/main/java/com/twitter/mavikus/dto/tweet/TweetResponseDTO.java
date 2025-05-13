@@ -1,8 +1,5 @@
 package com.twitter.mavikus.dto.tweet;
 
-import com.twitter.mavikus.entity.Comment;
-import com.twitter.mavikus.entity.Like;
-import com.twitter.mavikus.entity.Retweet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,10 +19,11 @@ public class TweetResponseDTO {
     private Long id;
     private String content;
     private Instant createdAt;
+    private Instant updatedAt;
     private UserDTO user;
-    private List<Like> likes;
-    private List<Comment> comments;
-    private List<Retweet> retweets;
+    private List<InteractionDTO> likes;
+    private List<InteractionDTO> comments;
+    private List<InteractionDTO> retweets;
 
     /**
      * Tweet yanıtında kullanıcı bilgilerini taşıyan DTO sınıfı

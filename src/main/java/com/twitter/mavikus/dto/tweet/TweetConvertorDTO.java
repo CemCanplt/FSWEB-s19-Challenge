@@ -3,6 +3,7 @@ package com.twitter.mavikus.dto.tweet;
 import com.twitter.mavikus.entity.Tweet;
 import com.twitter.mavikus.entity.User;
 
+import java.util.List;
 
 /**
  * Tweet entity'si ile ilgili DTO dönüşüm işlemlerini içeren yardımcı sınıf
@@ -30,14 +31,44 @@ public final class TweetConvertorDTO {
             userDTO = toUserDTO(tweet.getUser());
         }
         
+        // Like, Comment ve Retweet listelerini InteractionDTO listelerine dönüştür
+        List<InteractionDTO> likeDTOs = tweet.getLikes().stream()
+            .map(like -> InteractionDTO.builder()
+                .id(like.getId())
+                .userId(like.getUser().getId())
+                .userName(like.getUser().getUsername())
+                .createdAt(null) // Like'ın oluşturulma zamanı entity'de tutulmadığı için null
+                .build())
+            .toList();
+            
+        List<InteractionDTO> commentDTOs = tweet.getComments().stream()
+            .map(comment -> InteractionDTO.builder()
+                .id(comment.getId())
+                .userId(comment.getUser().getId())
+                .userName(comment.getUser().getUsername())
+                .createdAt(comment.getCreatedAt())
+                .commentText(comment.getCommentText())
+                .build())
+            .toList();
+            
+        List<InteractionDTO> retweetDTOs = tweet.getRetweets().stream()
+            .map(retweet -> InteractionDTO.builder()
+                .id(retweet.getId())
+                .userId(retweet.getUser().getId())
+                .userName(retweet.getUser().getUsername())
+                .createdAt(retweet.getCreatedAt())
+                .build())
+            .toList();
+        
         return TweetResponseDTO.builder()
                 .id(tweet.getId())
                 .content(tweet.getContent())
                 .createdAt(tweet.getCreatedAt())
+                .updatedAt(tweet.getUpdatedAt())
                 .user(userDTO)
-                .likes(tweet.getLikes())
-                .comments(tweet.getComments())
-                .retweets(tweet.getRetweets())
+                .likes(likeDTOs)
+                .comments(commentDTOs)
+                .retweets(retweetDTOs)
                 .build();
     }
     
@@ -73,6 +104,22 @@ public final class TweetConvertorDTO {
                 .id(tweet.getId())
                 .deletedContent(tweet.getContent())
                 .success(true)
+                .build();
+    }
+    
+    /**
+     * Tweet entity'sini TweetSimpleDTO'ya dönüştürür
+     * @param tweet Dönüştürülecek Tweet nesnesi
+     * @return Oluşturulan TweetSimpleDTO
+     */
+    public static TweetSimpleDTO toSimpleDTO(Tweet tweet) {
+        if (tweet == null) {
+            return null;
+        }
+        
+        return TweetSimpleDTO.builder()
+                .id(tweet.getId())
+                .content(tweet.getContent())
                 .build();
     }
     
